@@ -28,7 +28,7 @@ def translate_by_glm():
                 'history': [{'role': 'system', 'content': '你是一位历史学家，负责资治通鉴的翻译工作，将宋代成书的文言文版资治通鉴翻译成现代汉语'}]
             }
             print(data)
-            response = requests.post(url, data=data)
+            response = requests.post(url, json=data)
             print(response.json())
         break
 
