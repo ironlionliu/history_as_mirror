@@ -74,3 +74,48 @@ if __name__ == '__main__':
     res = get_turbo_Azure(prompt="你好，我是小明")
     # res = struct_data(result='明天天气如何')
     print(res)
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+# def struct_data(result):
+#     schema = Object(
+#         id="translate",
+#         description="文言文翻译成白话文",
+#         attributes=[
+#             Text(
+#                 id='翻译结果',
+#                 description='翻译成的白话文结果'
+#             )
+
+#         ],
+#         examples=[
+#             (
+#                 '''
+#                 燕惠王薨，子武成王立。
+#                 ''',
+#                 [
+#                     {
+#                         '翻译结果': '燕惠王趋势，他的儿子武成王即位'
+#                     }
+#                 ]
+#             )
+#         ]
+#     )
+#     chain = create_extraction_chain(model, schema)
+#     return chain.run(result)

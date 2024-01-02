@@ -4,8 +4,6 @@ import json
 from utils import get_turbo_Azure
 import requests
 
-
-
 def translate_by_glm():
     url = 'http://127.0.0.1:8000/chat'
     # tokenizer = AutoTokenizer.from_pretrained("THUDM/chatglm3-6b-32k", trust_remote_code=True)
@@ -19,15 +17,20 @@ def translate_by_glm():
             document = document[0:10]
             document_paragraph = '\n'.join(document)
             prompt = f'''
-            给你下面用三个反引号包裹的资治通鉴的原文```{document_paragraph}```\
-            将原文翻译成现代汉语，只将翻译结果返回
+            资治通鉴原文：```{document_paragraph}```
+            
+            
+            你需要把上面资治通鉴原文翻译成白话文，翻译时不要遗漏，不要有任何其他的多余内容
+            特别注意，不要在回复中出现资治通鉴原文，直接给出翻译结果
+            你的输出格式如下(你需要根据上面的要求，xxx是白话文翻译的占位符，你需要将内容填充进去)：
+            xxx
             '''
-            prompt = f'''你好'''
             data = {
                 'prompt': prompt,
-                'history': [{'role': 'system', 'content': '你是一位历史学家，负责资治通鉴的翻译工作，将宋代成书的文言文版资治通鉴翻译成现代汉语'}]
+                'history': [{'role': 'system', 'content': '你是一位历史学家，精通文言文翻译，现在负责资治通鉴的翻译工作，将宋代成书的文言文版资治通鉴翻译成现代汉语'}]
             }
             print(data)
+            print('\n\n')
             response = requests.post(url, json=data)
             print(response.json())
         break
