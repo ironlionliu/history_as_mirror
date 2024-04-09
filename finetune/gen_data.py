@@ -31,7 +31,7 @@ def gen_translate():
             count += len(volume[j].get('translation'))
     context = '\n\n'.join([f"{item.get('output')}\n{item.get('translation')}" for item in data])
     print(num_tokens_from_string(context))
-    with open(f'{root_path}/finetune/data_zztj.json', 'w') as file:
+    with open(f'{root_path}/LLaMA-Factory/data/zztj_translation.json', 'w') as file:
         file.write(json.dumps(data, ensure_ascii=False))
             
 if __name__ == '__main__':
