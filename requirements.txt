@@ -9,3 +9,8 @@ torch
 fastapi
 uvicorn
 python-multipart
+openai
+instructor
+tiktoken
+langchain_openai
+configobj

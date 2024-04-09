@@ -5,7 +5,7 @@ import os
 import json
 import re
 
-def get_urls_from_menu(menu_path = '../documents/资治通鉴-目录.html'):
+def get_urls_from_menu(menu_path = '../documents_baiyang/资治通鉴-目录.html'):
     htmlHandler = open('{}'.format(menu_path), 'r', encoding='utf-8')
     bs = BeautifulSoup(htmlHandler, 'html.parser')
     url_list = bs.find('div', {'class': 'ctext'}).find_all('a')

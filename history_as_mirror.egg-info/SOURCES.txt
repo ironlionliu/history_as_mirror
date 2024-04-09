@@ -1,0 +1,6 @@
+README.md
+setup.py
+history_as_mirror.egg-info/PKG-INFO
+history_as_mirror.egg-info/SOURCES.txt
+history_as_mirror.egg-info/dependency_links.txt
+history_as_mirror.egg-info/top_level.txt
