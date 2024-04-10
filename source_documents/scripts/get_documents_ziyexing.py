@@ -55,6 +55,27 @@ def parse_document(directory='', filename=''):
     with open(os.path.join(directory + '_translated', filename.replace('.html', '.json')), 'w') as file:
         file.write(json.dumps(split_documents, ensure_ascii=False))
 
+def remove_comment_by_husanxing(text):
+    pattern = r'〔〖胡三省注〗(.*?)〕'
+    removed_parts = []
+    result = ''
+    count = 0
+    start = 0
+    for i in range(len(text)):
+        if text[i:i+1] == '〔':
+            count += 1
+            if count == 1:
+                result += text[start:i]
+                start = i
+        elif text[i:i+1] == '〕':
+            count -= 1
+            if count == 0:
+                removed_part = text[start:i+1]
+                removed_parts.append(removed_part)
+                result += '〖胡三省注〗' + removed_part[5:-1] + '〕'
+                start = i+1
+    result += text[start:]
+    return result, removed_parts
 
 def split_document(content='', filename=''):
     paragraphs = re.split(r'【原文】|【译文】|《译文》', content)
@@ -66,8 +87,12 @@ def split_document(content='', filename=''):
     try:
         for i in range(1, len(paragraphs)):
             if i % 2 == 1:
+                split_comment = remove_comment_by_husanxing(paragraphs[i])
+                husanxing_comment = split_comment[1]
+                original = split_comment[0]
                 result.append({
-                    'original': paragraphs[i],
+                    'original': original,
+                    'husanxing_comment': husanxing_comment,
                     'translation': paragraphs[i+1]
                 })
     except Exception as e:
