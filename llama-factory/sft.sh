@@ -5,7 +5,7 @@ CUDA_VISIBLE_DEVICES=0 python ../LLaMA-Factory/src/train_bash.py \
     --do_train \
     --model_name_or_path Qwen/Qwen1.5-7B-Chat \
     --dataset alpaca_gpt4_en,glaive_toolcall \
-    --dataset_dir ../../data \
+    --dataset_dir ../LLaMA-Factory/data \
     --template qwen \
     --finetuning_type lora \
     --lora_target q_proj,v_proj \
