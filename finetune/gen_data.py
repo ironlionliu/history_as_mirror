@@ -68,7 +68,7 @@ def gen_pretrain():
         context = ''.join([item.get('text') for item in data])
         print(len(context))
         print(num_tokens_from_string(context))
-        # data = data[0:300]
+        data = data[0:96]
         file.write(json.dumps(data, ensure_ascii=False))
             
 if __name__ == '__main__':

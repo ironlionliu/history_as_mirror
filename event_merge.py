@@ -11,6 +11,7 @@ import json
 import re
 from textwrap import dedent
 from utils.utils import num_tokens_from_string
+from agent import HistoryAgent
 
 
 FINANCIAL_REPORT_CURRENT = 'uploaded_files/'
@@ -38,18 +39,20 @@ class HistoryStruct:
         files = os.listdir('source_documents/documents_ziyexing_translated')
         pattern = r'\d+'
         for file in files:
+            if file == '.DS_Store':
+                continue
             index = re.findall(pattern, file)[0]
             self.chapter_map[str(index)] = json.load(
                 open('source_documents/documents_ziyexing_translated/'+file, 'r'))
+        self.prompt_init()
+        self.ha = HistoryAgent()
 
-    def _client(self):
-        AZURE_OPENAI_API_KEY = '5c052b9003414d3e81a29f799b5e81f4'
-        AZURE_OPENAI_ENDPOINT = 'https://scc-01-uks-gpt-group01-model01.openai.azure.com/'
-        API_VERSION = '2023-07-01-preview'
-        AZURE_DEPLOYMENT = 'gpt-4-32k'
-        client = instructor.patch(AzureOpenAI(
-            api_key=AZURE_OPENAI_API_KEY, api_version=API_VERSION, azure_deployment=AZURE_DEPLOYMENT, azure_endpoint=AZURE_OPENAI_ENDPOINT))
-        return client
+    def prompt_init(self):
+        self.prompt = {
+            'bootstrap': dedent(f'''
+
+            ''')
+        }
 
     def get_chapter(self, chapter: str = ''):
         result = []
@@ -76,6 +79,40 @@ class HistoryStruct:
         class historical_event_list(BaseModel):
             event_list: List[historical_event]
         return historical_event_list
+    
+    def candidate_choose(self, documents=[], event_description=''):
+        # response_model = self.define_strcut()
+        documents = self.get_chapter(chapter='244')
+        documents = [documents[13], documents[14], documents[12], documents[6]]
+        context = ''
+        for index, item in enumerate(documents):
+            context += f'段落标号{index}：{item}\n\n'
+        print(context)
+        print('\n\n')
+        event_description = '甘露之变：是唐文宗不甘为宦官控制，策划诛杀宦官，以夺回皇帝丧失的权力但失败的历史事件。'
+        bootstrap = dedent(f'''
+            根据我所提供的历史事件的描述，和一系列提供给你的资治通鉴的原文段落，从中挑选出与历史事件最直接相关的段落和你的判断理由，将原文标号返回（不必返回原文），如果给定段落都不相关，返回空。
+            一步步来思考这个问题，忘掉
+            通过比较这些段落的描述与给定的历史事件的关联性，抓住历史事件的最重要的特征，从而找到最相关的段落（只要一个段落）。
+            
+            事件描述如下：
+            {event_description}
+
+            资治通鉴的原文段落如下，注意这些段落并没有时间的先后顺序：
+            {context}
+
+            你的返回为：
+            xxx（数字标号）
+            xxx（判断理由）
+
+        ''')
+        response = self.ha.agent(messages=[
+            {
+                'role': 'user',
+                'content': bootstrap,
+            }
+        ])
+        print(response)
 
     def struct_event(self, chapter: str = ''):
         context_list = self.get_chapter(chapter)
@@ -102,30 +139,16 @@ class HistoryStruct:
         expand = dedent(f'''
 
         ''')
-        response = client.chat.completions.create(
-            model=model_name,
-            # response_model=response_model,
-            response_format={"type": "json_object"},
-            temperature=0.0,
-            messages=[
-                {
-                    'role': 'system',
-                            'content': dedent(f'你是一位资深的中国历史学家，对司马光主编的资治通鉴有深入研究，你根据用户提供的资治通鉴译文，完成相关的任务。你尽力做好你的任务，我会给你一个$1000的奖励。'),
-                },
-                # {
-                #     'role': 'user',
-                #             'content': bootstrap,
-                # },
-                {
-                    'role': 'user',
-                            'content': assemble,
-                },
-            ],
-        )
-        response = response.model_dump_json(indent=2)
-        response = json.loads(response)
-        print(response)
-    
+        response = HistoryAgent(messages=[
+            # {
+            #     'role': 'user',
+            #             'content': bootstrap,
+            # },
+            {
+                'role': 'user',
+                'content': assemble,
+            },])
+
     def get_context(self, chapter: str = '', paragraph_index: int = 0):
         context_list = self.get_chapter(chapter)
         return context_list[paragraph_index]
@@ -170,6 +193,7 @@ if __name__ == '__main__':
     hs = HistoryStruct()
     # hs.struct_war(chapter='210')
     # hs.query(chapter='210')
-    hs.struct_event(chapter='244')
+    # hs.struct_event(chapter='244')
+    hs.candidate_choose()
     # context = hs.get_context(chapter='244', paragraph_index=7)
     # print(context)
