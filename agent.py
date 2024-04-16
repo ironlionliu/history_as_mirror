@@ -3,6 +3,7 @@ import instructor
 from textwrap import dedent
 from utils.utils import num_tokens_from_string
 import json
+import os
 
 
 class HistoryAgent:
