@@ -34,11 +34,7 @@ class HistoryAgent:
             response = json.loads(response)['choices'][0]['message']['content']
             return response
         elif 'local' in model_name:
-            client = OpenAI(
-                api_key="0",
-                base_url="http://localhost:{}/v1".format(
-                    os.environ.get("API_PORT", 8000)),
-            )
+            client = instructor.patch(OpenAI(api_key="0", base_url="http://localhost:{}/v1".format(os.environ.get("API_PORT", 8000))))
             response = client.chat.completions.create(
                 model=model_name,
                 response_model=response_model,
