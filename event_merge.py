@@ -62,7 +62,7 @@ class HistoryStruct:
                 result.append(item.get('translation'))
         return result
 
-    def define_strcut(self):
+    def define_struct(self):
         class event_type_enum(str, Enum):
             appointment = '任命'
             warfare = '战事'
@@ -81,14 +81,13 @@ class HistoryStruct:
         return historical_event_list
     
     def candidate_choose(self, documents=[], event_description=''):
-        # response_model = self.define_strcut()
+        # response_model = self.define_struct()
         documents = self.get_chapter(chapter='244')
-        documents = [documents[13], documents[14], documents[12], documents[6]]
+        # documents = [documents[14], documents[6]]
+        documents = [documents[6], documents[14]]
         context = ''
         for index, item in enumerate(documents):
             context += f'段落标号{index}：{item}\n\n'
-        print(context)
-        print('\n\n')
         event_description = '甘露之变：是唐文宗不甘为宦官控制，策划诛杀宦官，以夺回皇帝丧失的权力但失败的历史事件。'
         bootstrap = dedent(f'''
             根据我所提供的历史事件的描述，和一系列提供给你的资治通鉴的原文段落，从中挑选出与历史事件最直接相关的段落和你的判断理由，将原文标号返回（不必返回原文），如果给定段落都不相关，返回空。
@@ -111,7 +110,7 @@ class HistoryStruct:
                 'role': 'user',
                 'content': bootstrap,
             }
-        ])
+        ], model_name='local')
         print(response)
 
     def struct_event(self, chapter: str = ''):
@@ -121,8 +120,7 @@ class HistoryStruct:
             context += f'段落标号{index}：{item}\n\n'
 
         client = self._client()
-        model_name = 'gpt-4-32k'
-        response_model = self.define_strcut()
+        response_model = self.define_struct()
         bootstrap = dedent(dedent(f'''
                             我给你一些资治通鉴的段落，从这些段落中有一些与甘露之变相关，另外一些不相关，你从中筛选出你最确定是描述甘露之变的段落，只选取一个段落，把原文标号返回，如果给定段落都不相关，返回空。
                             甘露之变是唐文宗不甘为宦官控制，策划诛杀宦官，以夺回皇帝丧失的权力但失败的历史事件。
@@ -157,7 +155,7 @@ class HistoryStruct:
         context_list = self.chapter_map[chapter]
         client = self._client()
         model_name = 'gpt-4-32k'
-        response_model = self.define_strcut()
+        response_model = self.define_struct()
         result = []
         for item in context_list:
             if item.get('translation') is not None:

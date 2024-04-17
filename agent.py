@@ -6,13 +6,13 @@ import json
 import os
 
 
+AZURE_OPENAI_API_KEY = 'a5552ab2d19f422fa2035b0823a6e3c4'
+AZURE_OPENAI_ENDPOINT = 'https://scc-01-eeatus-gpt-group01-model01.openai.azure.com/'
+API_VERSION = '2024-02-15-preview'
+AZURE_DEPLOYMENT = 'gpt4-0125-Preview'
 class HistoryAgent:
-
     def __init__(self, model_name='gpt4-0125-Preview'):
-        AZURE_OPENAI_API_KEY = 'a5552ab2d19f422fa2035b0823a6e3c4'
-        AZURE_OPENAI_ENDPOINT = 'https://scc-01-eeatus-gpt-group01-model01.openai.azure.com/'
-        API_VERSION = '2024-02-15-preview'
-        AZURE_DEPLOYMENT = model_name
+        
         self.system_prompt = {
             'role': 'system',
             'content': dedent(f'你是一位资深的中国历史学家，有着卓越的历史研究能力，擅长史料的分析思辨，对司马光主编的资治通鉴有深入研究，你根据用户提供的资治通鉴译文，完成相关的任务。你尽力做好你的任务，我会给你一个$1000的奖励。')
@@ -34,24 +34,36 @@ class HistoryAgent:
             response = json.loads(response)['choices'][0]['message']['content']
             return response
         elif 'local' in model_name:
-            client = instructor.patch(OpenAI(api_key="0", base_url="http://localhost:{}/v1".format(os.environ.get("API_PORT", 8000))))
+            base_url = 'https://6ca6-52-42-79-222.ngrok-free.app'
+            client = OpenAI(
+                api_key="0",
+                base_url=f"{base_url}/v1",
+            )
             response = client.chat.completions.create(
                 model=model_name,
-                response_model=response_model,
                 temperature=0.0,
                 messages=messages
             )
             response = response.model_dump_json(indent=2)
+            print(response)
             response = json.loads(response)['choices'][0]['message']['content']
+            print('here!!!!!!!\n\n\n')
+            print(messages)
             return response
 
 
 if __name__ == '__main__':
     ha = HistoryAgent()
+    # response = ha.agent(messages=[
+    #     {
+    #         'role': 'user',
+    #         'content': '你是谁？',
+    #     }
+    # ], model_name='local')
     response = ha.agent(messages=[
         {
             'role': 'user',
-            'content': '讲一下汉代的温室之树',
+            'content': '你是谁？',
         }
-    ], model_name='local')
+    ])
     print(response)
