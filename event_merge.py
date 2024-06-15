@@ -79,7 +79,7 @@ class HistoryStruct:
         class historical_event_list(BaseModel):
             event_list: List[historical_event]
         return historical_event_list
-    
+
     def candidate_choose(self, documents=[], event_description=''):
         # response_model = self.define_struct()
         documents = self.get_chapter(chapter='244')
@@ -99,19 +99,70 @@ class HistoryStruct:
 
             资治通鉴的原文段落如下，注意这些段落并没有时间的先后顺序：
             {context}
-
-            你的返回为：
-            xxx（数字标号）
-            xxx（判断理由）
-
         ''')
+        bootstrap = dedent(f'''
+            {event_description}
+
+            资治通鉴的原文段落如下，注意这些段落并没有时间的先后顺序：
+            {context}
+        ''')
+        tools = [
+            {
+                "type": "function",
+                "function": {
+                    "name": "event",
+                    "description": "",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "index": {"type": "int", "description": "根据我所提供的历史事件的描述，和一系列提供给你的资治通鉴的原文段落，从中挑选出与历史事件最直接相关的段落和你的判断理由，将原文标号返回（不必返回原文），如果给定段落都不相关，返回空。\
+                                一步步来思考这个问题，忘掉\
+                                通过比较这些段落的描述与给定的历史事件的关联性，抓住历史事件的最重要的特征，从而找到最相关的段落（只要一个段落）。"},
+                            "reason": {"type": "str", "description": "你认为这个段落与甘露之变相关的理由"},
+                        },
+                        "required": ["最相关的段落", "判断理由"],
+                        # "properties": {
+                        #     "time": {"type": "str", "description": "time"},
+                        #     "person": {"type": "str", "description": "person"},
+                        # },
+                        # "required": ["最相关的段落", "判断理由"],
+                    },
+                },
+            }
+        ]
+        # bootstrap = dedent(f'''
+        # 张三昨天买了一只鸟
+        # ''')
+        # bootstrap = dedent(f'''
+        # My grades are A, A, B, and C. The credit hours are 3, 4, 3, and 2.
+        # ''')
+        # tools = [
+        #     {
+        #         "type": "function",
+        #         "function": {
+        #             "name": "calculate_gpa",
+        #             "description": "Calculate the Grade Point Average (GPA) based on grades and credit hours",
+        #             "parameters": {
+        #                 "type": "object",
+        #                 "properties": {
+        #                     "grades": {"type": "array", "items": {"type": "string"}, "description": "The grades"},
+        #                     "hours": {"type": "array", "items": {"type": "integer"}, "description": "The credit hours"},
+        #                 },
+        #                 "required": ["grades", "hours"],
+        #             },
+        #         },
+        #     }
+        # ]
         response = self.ha.agent(messages=[
             {
                 'role': 'user',
                 'content': bootstrap,
             }
-        ], model_name='local')
-        print(response)
+        ], model_name='local', tools=tools)
+        tool_call = response.choices[0].message.tool_calls[0].function
+        # Function(arguments='{"grades": ["A", "A", "B", "C"], "hours": [3, 4, 3, 2]}', name='calculate_gpa')
+        name, arguments = tool_call.name, json.loads(tool_call.arguments)
+        print(arguments)
 
     def struct_event(self, chapter: str = ''):
         context_list = self.get_chapter(chapter)
@@ -146,6 +197,33 @@ class HistoryStruct:
                 'role': 'user',
                 'content': assemble,
             },])
+
+    def ner_by_paragraph(self, chapter: str = ''):
+        documents = self.get_chapter(chapter=chapter)
+        # documents = [documents[0], documents[1]]
+        class historical_person(BaseModel):
+            person: Union[str] = Field(description='人物')
+        class historical_person_list(BaseModel):
+            person_list: List[historical_person]
+
+        # count = 0
+        person_list = []
+        for index, item in enumerate(documents):
+            ner_context = dedent(f'''
+                将以下资治通鉴的原文段落中的人物提取出来以数组形式返回：
+                给定资治通鉴的原文段落如下：
+                {item}
+            ''')
+            # count += num_tokens_from_string(ner_context)
+            response = HistoryAgent().agent(messages=[
+                {
+                    'role': 'user',
+                    'content': ner_context,
+                }
+            ], response_model=historical_person_list)
+            person_list.extend(response['person'])
+        result = pd.DataFrame(person_list)
+        result.to_csv(f'person_list_{chapter}.csv')
 
     def get_context(self, chapter: str = '', paragraph_index: int = 0):
         context_list = self.get_chapter(chapter)
@@ -192,6 +270,18 @@ if __name__ == '__main__':
     # hs.struct_war(chapter='210')
     # hs.query(chapter='210')
     # hs.struct_event(chapter='244')
-    hs.candidate_choose()
+    # hs.candidate_choose()
+    hs.ner_by_paragraph(chapter='210')
     # context = hs.get_context(chapter='244', paragraph_index=7)
     # print(context)
+
+
+
+    instruction = '这是指令',
+    input = '这是input'
+    message = [
+        {
+            'role': 'user',
+            'content': f'''insturction:{instruction}\ninput:{input}''',
+        }
+    ]

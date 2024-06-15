@@ -10,19 +10,22 @@ AZURE_OPENAI_API_KEY = 'a5552ab2d19f422fa2035b0823a6e3c4'
 AZURE_OPENAI_ENDPOINT = 'https://scc-01-eeatus-gpt-group01-model01.openai.azure.com/'
 API_VERSION = '2024-02-15-preview'
 AZURE_DEPLOYMENT = 'gpt4-0125-Preview'
+LOCAL_BASE_URL = 'https://6ca6-52-42-79-222.ngrok-free.app/v1'
+
+
 class HistoryAgent:
     def __init__(self, model_name='gpt4-0125-Preview'):
-        
+
         self.system_prompt = {
             'role': 'system',
             'content': dedent(f'你是一位资深的中国历史学家，有着卓越的历史研究能力，擅长史料的分析思辨，对司马光主编的资治通鉴有深入研究，你根据用户提供的资治通鉴译文，完成相关的任务。你尽力做好你的任务，我会给你一个$1000的奖励。')
         }
 
-    def agent(self, model_name='gpt4-0125-Preview', messages=[], response_model=None):
+    def agent(self, model_name='gpt4-0125-Preview', messages=[], response_model=None, tools=None):
         if 'gpt' in model_name:
             client = instructor.patch(AzureOpenAI(
                 api_key=AZURE_OPENAI_API_KEY, api_version=API_VERSION, azure_deployment=AZURE_DEPLOYMENT, azure_endpoint=AZURE_OPENAI_ENDPOINT))
-            messages.insert(0, self.system_prompt)
+            # messages.insert(0, self.system_prompt)
             print(messages)
             response = client.chat.completions.create(
                 model=model_name,
@@ -31,24 +34,29 @@ class HistoryAgent:
                 messages=messages
             )
             response = response.model_dump_json(indent=2)
-            response = json.loads(response)['choices'][0]['message']['content']
+            if response_model is None:
+                response = json.loads(response)['choices'][0]['message']['content']
             return response
         elif 'local' in model_name:
-            base_url = 'https://6ca6-52-42-79-222.ngrok-free.app'
+            base_url = 'https://6ca6-52-42-79-222.ngrok-free.app/v1'
             client = OpenAI(
                 api_key="0",
-                base_url=f"{base_url}/v1",
+                base_url=LOCAL_BASE_URL,
             )
             response = client.chat.completions.create(
-                model=model_name,
-                temperature=0.0,
-                messages=messages
+                model='test',
+                # temperature=1.0,
+                messages=messages,
+                tools=tools
             )
-            response = response.model_dump_json(indent=2)
             print(response)
-            response = json.loads(response)['choices'][0]['message']['content']
-            print('here!!!!!!!\n\n\n')
-            print(messages)
+            if response.choices[0].message.tool_calls is None:
+                raise ValueError("Cannot retrieve function call from the response.")
+            # response = response.model_dump_json(indent=2)
+            # print(response)
+            # response = json.loads(response)['choices'][0]['message']['content']
+            # print('here!!!!!!!\n\n\n')
+            # print(messages)
             return response
 
 
